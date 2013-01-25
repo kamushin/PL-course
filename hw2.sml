@@ -83,8 +83,8 @@ fun remove_card (cs, c, e) =
 fun all_same_color (cs) = 
     case cs of
 	[] => true
-      | [x] => true
-      | c1::c2::xs => c1 = c2 andalso all_same_color(c2::xs)
+      | x::[] => true
+      | c1::c2::xs => card_color(c1) = card_color(c2) andalso all_same_color(c2::xs)
 
 fun sum_cards (cds) = 
     let
@@ -103,9 +103,9 @@ fun score (cards, goal) =
     in
 	if all_same_color(cards)
 	then
-	    prilim_score
-	else
 	    prilim_score div 2
+	else
+	    prilim_score
     end
 
 fun officiate (cards, moves, goal) = 
@@ -131,9 +131,9 @@ fun score_challenge (cards, goal) =
     in
 	if all_same_color(cards)
 	then
-	    if prilim_score < prilim_score2 then prilim_score else prilim_score2
-	else
 	    if prilim_score < prilim_score2 then prilim_score div 2 else prilim_score2 div 2
+	else
+	    if prilim_score < prilim_score2 then prilim_score else prilim_score2
     end
 
 fun officiate_challenge (cards, moves, goal) = 

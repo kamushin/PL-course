@@ -56,3 +56,4 @@ card_value( (Clubs, (Num 2)) ) = 2;
 val cards = [ (Clubs, (Num 3)), (Spades, Ace), (Spades, Jack), (Hearts, (Num 6)) ];
 
 remove_card(cards, (Clubs, (Num 3)), IllegalMove) = [(Spades, Ace), (Spades, Jack), (Hearts, (Num 6)) ];
+
