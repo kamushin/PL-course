@@ -231,18 +231,5 @@ fun reasonable_date (date : int * int * int ) =
     in
 	if year <=0 orelse month < 1 orelse month > 12 orelse day <= 0
 	then false
-	else
-	    if is_leap(year)
-	    then
-		let
-		    val days = get_nth(leap_year_days_of_month, month)
-		in
-		    day <= days
-		end
-	    else
-		let
-		    val days = get_nth(normal_year_days_of_month, month)
-		in
-		    day <= days
-		end
+	else day <= get_nth(if is_leap(year) then leap_year_days_of_month else normal_year_days_of_month, month)
     end
