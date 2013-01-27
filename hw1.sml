@@ -1,13 +1,17 @@
 (* takes two dates and evaluates to true or false. It evaluates to true if the first 
 argument is a date that comes before the second argument. (If the two dates are the 
 same, the result is false.) *)
-fun is_older (a : (int * int * int), b: (int * int * int)) = 
-    if #1 a <> #1 b
-    then #1 a < #1 b
-    else
-	if #2 a <> #2 b
-	then #2 a < #2 b
-	else #3 a < #3 b
+fun is_older (d_1 : (int * int * int), d_2: (int * int * int)) = 
+    let
+	val y1 = #1 d_1
+	val y2 = #1 d_2
+	val m1 = #2 d_1
+	val m2 = #2 d_2
+	val d1 = #3 d_1
+	val d2 = #3 d_2
+    in
+	not (y1 >= y2 andalso m1 >= m2 andalso d1 >= d2)
+    end
 
 (* takes a list of dates and a month (i.e., an int) and returns
 how many dates in the list are in the given month *)
@@ -16,8 +20,7 @@ fun number_in_month (dates : (int * int * int) list, month : int) =
     then 0
     else
 	let 
-	    val date = hd dates
-	    val m = #2 date
+	    val m = #2 (hd date)
 	    val cnt = if m = month then 1 else 0		     
 	in
 	    cnt + number_in_month((tl dates), month)	    
@@ -30,8 +33,7 @@ has no number repeated. Hint: Use your answer to the previous problem*)
 fun number_in_months (dates : (int * int * int) list, months : int list) = 
     if null months
     then 0
-    else
-	number_in_month(dates, (hd months)) + number_in_months(dates, (tl months))
+    else number_in_month(dates, (hd months)) + number_in_months(dates, (tl months))
 
 (* takes a list of dates and a month (i.e., an int) and returns a list 
 holding the dates from the argument list of dates that are in the month. 
@@ -56,12 +58,7 @@ answer to the previous problem and SML's list-append operator (@).*)
 fun dates_in_months (dates : (int * int * int) list, months : int list) = 
     if null months
     then []
-    else
-	let 
-	    val front = dates_in_month(dates, (hd months))
-	in
-	    front @ dates_in_months(dates, (tl months))
-	end
+    else dates_in_month(dates, (hd months)) @ dates_in_months(dates, (tl months))
 
 (* takes a list of strings and an int n and returns the nth element of the list 
 where the head of the list is 1st. Do not worry about the case where the list has 
@@ -70,8 +67,7 @@ which is okay.*)
 fun get_nth (strings : string list, n : int) = 
     if n = 1
     then hd strings
-    else
-	get_nth((tl strings), n-1)
+    else get_nth((tl strings), n-1)
 
 (* takes a date and returns a string of the form January 20, 2013 (for example). 
 Use the operator ^ for concatenating strings and the library function Int.toString for 
@@ -84,7 +80,11 @@ fun date_to_string (date : int * int * int) =
     let 
 	val month_string_list = ["January", "February", "March", "April","May", "June", "July", "August", "September", "October", "November", "December"]
     in
-	get_nth(month_string_list, (#2 date)) ^ " " ^ (Int.toString((#3 date))) ^ ", " ^ (Int.toString((#1 date)))
+	get_nth(month_string_list, (#2 date)) ^ 
+	" " ^ 
+	(Int.toString((#3 date))) ^ 
+	", " ^ 
+	(Int.toString((#1 date)))
     end
 
 (* takes an int called sum, which you can assume is positive, and an int list, which 
@@ -93,14 +93,9 @@ int n such that the rst n elements of the list add to less than sum, but the r
 n + 1 elements of the list add to sum or more. Assume the entire list sums to more than 
 the passed in value; it is okay for an exception to occur if this is not the case.*)
 fun number_before_reaching_sum (sum : int, ints : int list) = 
-    let 
-	val first = hd ints
-    in
-	if first >= sum
-	then 0
-	else
-	    1 + number_before_reaching_sum(sum-first, (tl ints))
-    end
+    if hd ints >= sum
+    then 0
+    else 1 + number_before_reaching_sum(sum-first, (tl ints))
 
 (* takes a day of year (i.e., an int between 1 and 365) and returns what month that day 
 is in (1 for January, 2 for February, etc.). Use a list holding 12 integers and your
@@ -118,8 +113,7 @@ of day day2. Note the result will have length day2 - day1 + 1 or length 0 if day
 fun month_range (day1 : int, day2 : int) =     
     if day1 > day2
     then []
-    else
-	what_month(day1) :: month_range(day1+1, day2)
+    else what_month(day1) :: month_range(day1+1, day2)
 
 (* takes a list of dates and evaluates to an (int*int*int) option. It evaluates to 
 NONE if the list has no dates and SOME d if the date d is the oldest date in the list.*)
@@ -173,8 +167,7 @@ fun number_in_months_challenge (dates : (int * int * int) list, months : int lis
 	in
 	    if null months
 	    then 0
-	    else
-		number_in_month(dates, (hd months)) + number_in_months_challenge(dates, (tl months))
+	    else number_in_month(dates, (hd months)) + number_in_months_challenge(dates, (tl months))
 	end
     end	    
 
@@ -211,12 +204,7 @@ fun dates_in_months_challenge (dates : (int * int * int) list, months : int list
 	in
 	    if null months
 	    then []
-	    else
-		let 
-		    val front = dates_in_month(dates, (hd months))
-		in
-		    front @ dates_in_months(dates, (tl months))
-		end		
+	    else dates_in_month(dates, (hd months)) @ dates_in_months(dates, (tl months))
 	end
     end
 
