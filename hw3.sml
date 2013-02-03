@@ -160,7 +160,7 @@ fun type_of_pattern table pat =
 		  case r para of
 		      NONE => NONE
 		    | SOME tmp_t => 
-		      if cons_name = name andalso t = tmp_t (* may have bug, type equal legal ?  *)
+		      if cons_name = name andalso t = tmp_t
 		      then SOME (Datatype(data_type))
 		      else type_of_constructor xs name para
 	      )
@@ -181,29 +181,45 @@ fun more_general_one (t1,t2) =
     case (t1, t2) of
 	(UnitT, UnitT) => SOME t1
       | (IntT, IntT) => SOME t1
-      | (Datatype(d1), Datatype(d2)) => if d1 = d2 then SOME t1 else NONE
-      | (TupleT(_), Anything) => SOME t1
-      | (Anything, TupleT(_)) => SOME t2
-      | (Anything, _) => SOME t1
-      | (_, Anything) => SOME t2
+      | (Datatype d1, Datatype d2) => if d1 = d2 then SOME t1 else NONE
+      | (TupleT _, Anything) => SOME t1
+      | (Anything, TupleT _) => SOME t2
+      | (Anything, _) => SOME t2
+      | (_, Anything) => SOME t1
       | (TupleT(l1), TupleT(l2)) => 
-	(case all_results more_general_one (ListPair.zip(l1, l2)) of
-	     NONE => NONE
-	   | SOME lst => SOME (TupleT(lst)))
+	(
+	  if List.length l1 <> List.length l2
+	  then NONE
+	  else
+	      case all_results more_general_one (ListPair.zip(l1, l2)) of
+		  NONE => NONE
+		| SOME lst => SOME (TupleT(lst)))
       | _ => NONE
+
+(* find the most general *)
+fun filter_most_general result lst =
+    case lst of
+	[] => SOME result
+      | [x] => (case more_general_one(result,x) of
+		    NONE => NONE
+		  | SOME r => SOME r
+	       )
+      | a::b::xs => case more_general_one(a,b) of
+			NONE => NONE
+		      | SOME t => filter_most_general t xs
 
 fun typecheck_patterns (table, pats) = 
     let
 	val types = all_results (type_of_pattern table) pats
-	fun filter_most_general result lst =
-	    case lst of
-		[] => SOME result
-	      | [x] => SOME x
-	      | a::b::xs => case more_general_one(a,b) of
-				NONE => NONE
-			      | SOME t => filter_most_general t xs
+	(* check illegal variable case *)
+	val check_pat_result = all_results (fn p => if check_pat p then SOME p else NONE) pats
     in
-	case types of
+	case check_pat_result of
 	    NONE => NONE
-	  | SOME lst => filter_most_general Anything lst
+	  | SOME _ => 
+	    (
+	      case types of
+		  NONE => NONE
+		| SOME lst => filter_most_general Anything lst
+	    )
     end
