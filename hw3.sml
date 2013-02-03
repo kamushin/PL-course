@@ -148,6 +148,19 @@ fun all_results pred questions =
 	answer_helper [] questions
     end
 
+fun same_type t1 t2 =
+    case (t1, t2) of
+	(UnitT, UnitT) => true
+      | (IntT, IntT) => true
+      | (Datatype x, Datatype y) => x = y
+      | (Anything, _) => true
+      | (_, Anything) => true
+      | (TupleT(xs), TupleT(ys)) => (
+	  if List.length xs <> List.length ys
+	  then false
+	  else List.all (fn (a,b) => same_type a b) (ListPair.zip(xs, ys)))
+      | _ => false
+
 (* get the type of a pattern *)
 fun type_of_pattern table pat = 
     let
@@ -160,18 +173,22 @@ fun type_of_pattern table pat =
 		  case r para of
 		      NONE => NONE
 		    | SOME tmp_t => 
+		      (* if cons_name = name andalso same_type t tmp_t *)
+                      (* the selection bwteen the next depends on the 
+                         meaning of type "Anything", is it real "Anything"? or 
+                         just the type of Variable*)
 		      if cons_name = name andalso t = tmp_t
 		      then SOME (Datatype(data_type))
-		      else type_of_constructor xs name para
-	      )
+		      else type_of_constructor xs name para)
     in
 	case pat of
 	    UnitP => SOME UnitT
 	  | ConstP _ => SOME IntT
 	  | Variable _ => SOME Anything
-	  | TupleP(ps) => (case all_results r ps of
-			      NONE => NONE
-			    | SOME lst => SOME (TupleT(lst)))
+	  | TupleP(ps) => (
+	      case all_results r ps of
+		  NONE => NONE
+		| SOME lst => SOME (TupleT(lst)))
 	  | ConstructorP(s, p) => type_of_constructor table s p 
 	  | Wildcard => SOME Anything
     end
@@ -186,8 +203,7 @@ fun more_general_one (t1,t2) =
       | (Anything, TupleT _) => SOME t2
       | (Anything, _) => SOME t2
       | (_, Anything) => SOME t1
-      | (TupleT(l1), TupleT(l2)) => 
-	(
+      | (TupleT(l1), TupleT(l2)) => (
 	  if List.length l1 <> List.length l2
 	  then NONE
 	  else
@@ -200,14 +216,15 @@ fun more_general_one (t1,t2) =
 fun filter_most_general result lst =
     case lst of
 	[] => SOME result
-      | [x] => (case more_general_one(result,x) of
-		    NONE => NONE
-		  | SOME r => SOME r
-	       )
-      | a::b::xs => case more_general_one(a,b) of
-			NONE => NONE
-		      | SOME t => filter_most_general t xs
-
+      | [x] => (
+	  case more_general_one(result,x) of
+	      NONE => NONE
+	    | SOME r => SOME r)
+      | a::b::xs => (
+	  case more_general_one(a,b) of
+	      NONE => NONE
+	    | SOME t => filter_most_general t xs)
+					    
 fun typecheck_patterns (table, pats) = 
     let
 	val types = all_results (type_of_pattern table) pats
@@ -216,10 +233,8 @@ fun typecheck_patterns (table, pats) =
     in
 	case check_pat_result of
 	    NONE => NONE
-	  | SOME _ => 
-	    (
+	  | SOME _ => (
 	      case types of
 		  NONE => NONE
-		| SOME lst => filter_most_general Anything lst
-	    )
+		| SOME lst => filter_most_general Anything lst)
     end
