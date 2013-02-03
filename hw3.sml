@@ -113,7 +113,7 @@ fun check_pat p =
 		[] => false
 	      | x::xs => (List.exists (fn name => name = x) xs) orelse check_repeat xs
     in
-	check_repeat(var_names(p))
+	not (check_repeat(var_names(p)))
     end
 
 fun match (value, pattern) =
@@ -131,6 +131,9 @@ fun match (value, pattern) =
 	       | SOME lst => SOME lst)
       | _ => NONE
 
+fun first_match v patterns = 
+    SOME (first_answer (fn p => match (v, p)) patterns)
+    handle NoAnswer => NONE
 
 (* Challenge *)
 fun all_results pred questions = 
@@ -153,10 +156,14 @@ fun type_of_pattern table pat =
 	fun type_of_constructor lookup_table name para = 
 	    case lookup_table of
 		[] => NONE
-	      | (cons_name, data_type, t)::xs => 
-		if cons_name = name andalso t = para (* may have bug, type equal legal ?  *)
-		then SOME (Datatype(data_type))
-		else type_of_constructor xs name para
+	      | (cons_name, data_type, t)::xs => (
+		  case r para of
+		      NONE => NONE
+		    | SOME tmp_t => 
+		      if cons_name = name andalso t = tmp_t (* may have bug, type equal legal ?  *)
+		      then SOME (Datatype(data_type))
+		      else type_of_constructor xs name para
+	      )
     in
 	case pat of
 	    UnitP => SOME UnitT
@@ -175,7 +182,7 @@ fun more_general_one (t1,t2) =
 	(UnitT, UnitT) => SOME t1
       | (IntT, IntT) => SOME t1
       | (Datatype(d1), Datatype(d2)) => if d1 = d2 then SOME t1 else NONE
-      | (TupleT(_),Anything) => SOME t1
+      | (TupleT(_), Anything) => SOME t1
       | (Anything, TupleT(_)) => SOME t2
       | (Anything, _) => SOME t1
       | (_, Anything) => SOME t2
