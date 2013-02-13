@@ -30,14 +30,14 @@ fun get_substitutions1 (substitutions, s) =
 
 fun get_substitutions2 (substitutions, s) = 
     let 
-	fun get_sub(subs, s, accu) = 
+	fun get_sub(subs, accu) = 
 	    case subs of 
 		[] => accu
 	      | x::xs => case all_except_option(s, x) of
-			    NONE => get_sub(xs, s, accu)
-			  | SOME lst => get_sub(xs, s, accu @ lst)
+			    NONE => get_sub(xs, accu)
+			  | SOME lst => get_sub(xs, accu @ lst)
     in
-	get_sub(substitutions, s, [])
+	get_sub(substitutions, [])
     end
 
 fun similar_names (substitutions, {first=first, middle=middle, last=last}) = 
@@ -102,10 +102,8 @@ fun score (cards, goal) =
 	val prilim_score = if sum > goal then 3 * (sum - goal) else goal -sum
     in
 	if all_same_color(cards)
-	then
-	    prilim_score div 2
-	else
-	    prilim_score
+	then prilim_score div 2
+	else prilim_score
     end
 
 fun officiate (cards, moves, goal) = 
@@ -122,32 +120,3 @@ fun officiate (cards, moves, goal) =
     in
 	play(cards, [], moves)
     end
-
-fun score_challenge (cards, goal) = 
-    let
-	val sum = sum_cards(cards)
-	val prilim_score = if sum > goal then 3 * (sum - goal) else goal -sum
-	val prilim_score2 = if (sum-10) > goal then 3 * (sum - 10 - goal) else goal - sum + 10									      
-    in
-	if all_same_color(cards)
-	then
-	    if prilim_score < prilim_score2 then prilim_score div 2 else prilim_score2 div 2
-	else
-	    if prilim_score < prilim_score2 then prilim_score else prilim_score2
-    end
-
-fun officiate_challenge (cards, moves, goal) = 
-    let
-	fun play(card_list, held_cards, move_list) = 
-	    case move_list of
-		[] => score(held_cards, goal)
-	      | (Discard c)::xs => play(card_list, remove_card(held_cards, c, IllegalMove), xs)
-	      | (Draw)::xs => case card_list of 
-				[] => score(held_cards, goal)
-			      | draw::rest => if sum_cards(draw::held_cards) > goal 
-					      then score(draw::held_cards, goal) 
-					      else play(rest, draw::held_cards, xs)
-    in
-	play(cards, [], moves)
-    end
-
