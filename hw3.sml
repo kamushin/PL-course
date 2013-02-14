@@ -39,35 +39,11 @@ datatype typ = Anything
 fun only_capitals strs = 
     List.filter (fn s => Char.isUpper(String.sub(s, 0))) strs
 		
-fun longest_string1 strs = 
-    let
-	fun update(next, current) = 
-	    if String.size next > String.size current
-	    then next
-	    else current
-    in
-	foldl update "" strs
-    end
+fun longest_string1 strs = foldl (fn next current => if String.size next > String.size current then next else current) "" strs
 
-fun longest_string2 strs = 
-    let
-	fun update(next, current) = 
-	    if String.size next >= String.size current
-	    then next
-	    else current
-    in
-	foldl update "" strs
-    end
+fun longest_string2 strs = foldl (fn next current => if String.size next >= String.size current then next else current) "" strs
 
-fun longest_string_helper f strs = 
-    let
-	fun update(next, current) = 
-	    if f(String.size(next), String.size(current))
-	    then next
-	    else current
-    in
-	foldl update "" strs
-    end
+fun longest_string_helper f strs = foldl (fn next current => if f(String.size next, String.size current) then next else current) "" strs
 
 val longest_string3 = longest_string_helper (fn (next, current) => next >  current)
 val longest_string4 = longest_string_helper (fn (next, current) => next >= current)
@@ -103,10 +79,9 @@ fun check_pat p =
     let
 	fun var_names pat = 
 	    case pat of
-		Wildcard          => []
-	      | Variable x        => [x]
+		Variable x        => [x]
 	      | TupleP ps         => List.foldl (fn (p,i) => (var_names p) @ i) [] ps
-	      | ConstructorP(_,p) => []
+	      | ConstructorP(_,p) => var_names p
 	      | _                 => []
 	fun check_repeat name_list = 
 	    case name_list of
@@ -126,9 +101,7 @@ fun match (value, pattern) =
       | (TupleP(ps), Tuple(vs)) => 
 	if List.length ps <> List.length vs
 	then NONE
-	else (case all_answers match (ListPair.zip(vs, ps)) of
-		 NONE => NONE
-	       | SOME lst => SOME lst)
+	else all_answers match (ListPair.zip(vs, ps))
       | _ => NONE
 
 fun first_match v patterns = 
