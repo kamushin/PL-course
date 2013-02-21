@@ -58,22 +58,37 @@
 ;; 9
 (define (vector-assoc v vec)
   (letrec ([f (lambda (pos) 
-                (if (>= pos (vector-length v)) 
+                (if (>= pos (vector-length vec)) 
                     #f
-                    (if (pair? (vector-ref v pos)) 
-                        (if (equal? (car (vector-ref v pos)) v) 
-                            (vector-ref v pos) 
+                    (if (pair? (vector-ref vec pos)) 
+                        (if (equal? (car (vector-ref vec pos)) v) 
+                            (vector-ref vec pos) 
                             (f (+ pos 1))) 
                         (f (+ pos 1)))))])
     (f 0)))
 
 ;; 10
 (define (cached-assoc xs n)
-  (letrec () 
-    ()))
+  (letrec (
+           [cache (make-vector n #f)]
+           [update-cache (letrec ([pos 0]) 
+                           (lambda (p) 
+                             (begin
+                               (vector-set! cache pos p)
+                               (set! pos (remainder (+ pos 1) n)))))]) 
+    (lambda (v)
+      (letrec ([cache-result (vector-assoc v cache)]) 
+        (if cache-result
+         (begin cache-result)
+         (letrec ([r (assoc v xs)]) 
+           (if r (begin (update-cache r) r) #f)))))))
 
 
-;;;; test
-(define xs (cons "a" (cons "b" (cons "c" null))))
-(define ys (cons 1 (cons 2 null)))
-(define t (cycle-lists xs ys))
+;; challenge
+(define-syntax while-less
+  (syntax-rules (do)
+    [(while-less e1 do e2)
+     (letrec (
+              [goal e1]
+              [f (lambda () (if (< e2 goal) (f) #t))]) 
+       (f))]))
