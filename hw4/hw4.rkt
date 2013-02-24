@@ -32,13 +32,13 @@
 ;; 5
 (define funny-number-stream 
   (letrec ([f (lambda (count) 
-                (cons (if (= 0 (remainder count 5)) (* -1 count) count) (lambda () (f (+ count 1)))))])
+                (cons (if (= 0 (remainder count 5)) (- count) count) (lambda () (f (+ count 1)))))])
     (lambda () (f 1))))
 
 ;; 6
 (define dan-then-dog
   (letrec ([f (lambda (sgn) 
-                (cons (if (= sgn 1) "dan.jpg" "dog.jpg") (lambda () (f (* -1 sgn)))))])
+                (cons (if (= sgn 1) "dan.jpg" "dog.jpg") (lambda () (f (- sgn)))))])
     (lambda () (f 1))))
 
 ;; 7
