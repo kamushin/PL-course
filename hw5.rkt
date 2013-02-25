@@ -102,7 +102,6 @@
                             (cons (cons arg-name arg-value) lex-scope)))))
                (error "applied on non-closure")))]
         [(aunit? e) e]
-        [(isaunit? e) (if (aunit? (eval-under-env (isaunit-e e) env)) (int 1) (int 0))]
         [#t (begin (error "bad MUPL expression"))]))
 
 ;; Do NOT change
