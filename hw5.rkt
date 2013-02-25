@@ -82,45 +82,69 @@
            (if (and (int? v1) 
                     (int? v2)) 
                (if (> (int-num v1) (int-num v2)) 
-                   (eval-under-env (ifgreater-e3 e)) 
-                   (eval-under-env (ifgreater-e4 e))) 
+                   (eval-under-env (ifgreater-e3 e) env) 
+                   (eval-under-env (ifgreater-e4 e) env)) 
                (error "comparison applied to non-int")))]
         [(fun? e) 
          (closure env e)]
         [(call? e) 
          (let ([f1 (eval-under-env (call-funexp e) env)]) 
-           (if (closure? f1) 
-               (let ([name    (fun-nameopt (closure-fun f1))]
-                     [arg     (fun-formal  (closure-fun f1))]
-                     [old-env (closure-env f1)]) 
+           (if (closure? f1)
+               (let ([name      (fun-nameopt (closure-fun f1))]
+                     [arg-name  (fun-formal  (closure-fun f1))]
+                     [arg-value (eval-under-env (call-actual e) env)]
+                     [lex-scope (closure-env f1)]) 
                  (eval-under-env 
                   (fun-body (closure-fun f1)) 
                   (if (equal? #f name) 
-                      (cons (cons arg (eval-under-env (call-actual e) env)) old-env) 
-                      (cons (cons name f1) 
-                            (cons (cons arg (eval-under-env (call-actual e) env)) old-env)))))
+                      (cons (cons arg-name arg-value) lex-scope)
+                      (cons (cons name f1)
+                            (cons (cons arg-name arg-value) lex-scope)))))
                (error "applied on non-closure")))]
-        [#t (error "bad MUPL expression")]))
+        [(aunit? e) e]
+        [(isaunit? e) (if (aunit? (eval-under-env (isaunit-e e) env)) (int 1) (int 0))]
+        [#t (begin (error "bad MUPL expression"))]))
 
 ;; Do NOT change
 (define (eval-exp e)
   (eval-under-env e null))
-        
+
 ;; Problem 3
 
-(define (ifaunit e1 e2 e3) "CHANGE")
+(define (ifaunit e1 e2 e3) 
+  (ifgreater (isaunit e1) (int 0) e2 e3))
 
-(define (mlet* lstlst e2) "CHANGE")
+(define (mlet* lstlst e2) 
+  (letrec ([let-helper (lambda (lst)
+                      (if (null? lst) 
+                          e2 
+                          (mlet (car (car lst)) (cdr (car lst)) 
+                                (let-helper (cdr lst)))))])
+    (let-helper lstlst)))
 
-(define (ifeq e1 e2 e3 e4) "CHANGE")
+(define (ifeq e1 e2 e3 e4) 
+  (mlet* (list (cons "_x" e1)  
+               (cons "_y" e2)) 
+         (ifgreater (var "_x") (var "_y") 
+                    e4 
+                    (ifgreater (var "_y") (var "_x") 
+                               e4 
+                               e3))))
 
 ;; Problem 4
 
-(define mupl-map "CHANGE")
+(define mupl-map 
+  (fun #f "f"
+       (fun "get-list" "l" 
+            (ifaunit (var "l") 
+                     (aunit) 
+                     (apair (call (var "f") (fst (var "l"))) 
+                            (call (var "get-list") (snd (var "l"))))))))
 
 (define mupl-mapAddN 
   (mlet "map" mupl-map
-        "CHANGE (notice map is now in MUPL scope)"))
+        (fun "addN" "i"
+             (call (var "map") (fun #f "x" (add (var "i") (var "x")))))))
 
 ;; Challenge Problem
 
