@@ -17,17 +17,15 @@
 
 ;; 3
 (define (list-nth-mod xs n)
-  (if (< n 0)
-      (error "list-nth-mod: negative number")
-      (if (null? xs)
-          (error "list-nth-mod: empty list")
-          (car (list-tail xs (remainder n (length xs)))))))
+  (cond [(< n 0) (error "list-nth-mod: negative number")]
+        [(null? xs) (error "list-nth-mod: empty list")]
+        [#t (car (list-tail xs (remainder n (length xs))))]))
 
 ;; 4
 (define (stream-for-n-steps s n)
   (if (= n 0)
         null
-        (cons (car (s)) (stream-for-n-steps (cdr (s)) (- n 1)))))
+        (let ((next (s)))(cons (car next) (stream-for-n-steps (cdr next) (- n 1))))))
 
 ;; 5
 (define funny-number-stream 
